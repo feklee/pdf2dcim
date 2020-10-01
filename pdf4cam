@@ -75,7 +75,7 @@ fi
 
 PDF="$1"
 SIZE="${WIDTH}x$HEIGHT"
-SCRIPT_DIR="$(dirname '$BASH_SOURCE')"
+SCRIPT_DIR="$(dirname "$BASH_SOURCE")"
 TEMPLATE="$SCRIPT_DIR/pdf4cam.jpg" # taken with a camera, to copy EXIF
 DENSITY="${RESOLUTION}x$RESOLUTION"
 
