@@ -1,5 +1,5 @@
-pdf4cam converts PDF files so that they can be viewed inside a digital
-camera as JPEG images. It has been tested with a Ricoh GRⅢ.
+pdf4cam converts PDF documents so that they can be viewed inside a
+digital camera as JPEG images. It has been tested with a Ricoh GRⅢ.
 
 
 License
