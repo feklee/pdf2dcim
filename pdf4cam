@@ -10,6 +10,7 @@ HEIGHT=4000
 START_NUMBER=0
 ANGLE=0
 ORIENTATION=1 # 1 = 0°, 3 = 180°, 6 = 90°, 8 = -90°
+RESOLUTION=300
 
 function verify_presence {
     hash "$1" 2>/dev/null || {
@@ -31,7 +32,8 @@ Convert image files to: P0000000.JPG, P0000001.JPG, ...
     -W WIDTH    width in mm, default $W
     -H HEIGHT   height in mm, default $H
     -P          portrait, default landscape
-    -S NUMBER   number of first image, default 0
+    -S NUMBER   number of first image, default $START_NUMBER
+    -R DPI      resolution when rendering the PDF, default $RESOLUTION
 
 The images are viewable in camera. Avoid file names with numbers that
 are already on the camera. Even if the prefix is different than "P",
@@ -41,7 +43,7 @@ EOF
 }
 
 OPTIND=1
-while getopts hW:H:PS: opt; do
+while getopts hW:H:PS:R: opt; do
     case $opt in
         h)
             show_help
@@ -55,6 +57,8 @@ while getopts hW:H:PS: opt; do
             ORIENTATION=8
             ;;
         S)  START_NUMBER=$OPTARG
+            ;;
+        R)  RESOLUTION=$OPTARG
             ;;
         *)
             show_help >&2
@@ -73,6 +77,7 @@ PDF="$1"
 SIZE="${WIDTH}x$HEIGHT"
 SCRIPT_DIR="$(dirname '$BASH_SOURCE')"
 TEMPLATE="$SCRIPT_DIR/pdf4cam.jpg" # taken with a camera, to copy EXIF
+DENSITY="${RESOLUTION}x$RESOLUTION"
 
 compgen -G "P+([0-9]).JPG" >/dev/null && {
     echo "Output files already exist" >&2
@@ -80,7 +85,8 @@ compgen -G "P+([0-9]).JPG" >/dev/null && {
 }
 
 # Rasterize:
-convert -sampling-factor 4:2:2 -rotate "$ANGLE" -resize "$SIZE" \
+convert -sampling-factor 4:2:2 -density "$DENSITY" \
+        -rotate "$ANGLE" -resize "$SIZE" \
         "$PDF" -background white -alpha remove \
         -scene "$START_NUMBER" P%07d.JPG
 
