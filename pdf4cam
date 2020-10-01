@@ -1,0 +1,98 @@
+#!/bin/bash
+
+# Felix E. Klee <felix.klee@inka.de>
+
+shopt -s extglob
+shopt -s nullglob
+
+WIDTH=6000
+HEIGHT=4000
+START_NUMBER=0
+ANGLE=0
+ORIENTATION=1 # 1 = 0°, 3 = 180°, 6 = 90°, 8 = -90°
+
+function verify_presence {
+    hash "$1" 2>/dev/null || {
+        echo "$1 is required but cannot be found" >&2
+        exit 1
+    }
+}
+
+verify_presence convert
+verify_presence exiftool
+
+# Usage info
+function show_help {
+cat << EOF
+Usage: ${0##*/} [-hWHD] [PDF FILE]
+Convert image files to: P0000000.JPG, P0000001.JPG, ...
+
+    -h          display this help and exit
+    -W WIDTH    width in mm, default $W
+    -H HEIGHT   height in mm, default $H
+    -P          portrait, default landscape
+    -S NUMBER   number of first image, default 0
+
+The images are viewable in camera. Avoid file names with numbers that
+are already on the camera. Even if the prefix is different than "P",
+this can lead to naming conflicts and the camera will only display one
+of images.
+EOF
+}
+
+OPTIND=1
+while getopts hW:H:PS: opt; do
+    case $opt in
+        h)
+            show_help
+            exit 0
+            ;;
+        W)  WIDTH=$OPTARG
+            ;;
+        H)  HEIGHT=$OPTARG
+            ;;
+        P)  ANGLE=90
+            ORIENTATION=8
+            ;;
+        S)  START_NUMBER=$OPTARG
+            ;;
+        *)
+            show_help >&2
+            exit 1
+            ;;
+    esac
+done
+shift "$((OPTIND-1))" # Discard the options and sentinel --
+
+if [ "$#" -ne 1 ]; then
+    show_help >&2
+    exit 1
+fi
+
+PDF="$1"
+SIZE="${WIDTH}x$HEIGHT"
+SCRIPT_DIR="$(dirname '$BASH_SOURCE')"
+TEMPLATE="$SCRIPT_DIR/pdf4cam.jpg" # taken with a camera, to copy EXIF
+
+compgen -G "P+([0-9]).JPG" >/dev/null && {
+    echo "Output files already exist" >&2
+    exit 1
+}
+
+# Rasterize:
+convert -sampling-factor 4:2:2 -rotate "$ANGLE" -resize "$SIZE" \
+        "$PDF" -background white -alpha remove \
+        -scene "$START_NUMBER" P%07d.JPG
+
+# Make compatible with camera:
+THUMBD="$(mktemp -d)"
+for JPG in P+([0-9]).JPG; do
+    THUMB="$THUMBD/$JPG"
+    convert "$JPG" -resize 160x120 -background black -gravity center \
+            -extent 160x120 -sampling-factor 4:2:2 "$THUMB"
+    exiftool -q -overwrite_original -TagsFromFile "$TEMPLATE" \
+             -all:all -unsafe -XML:All -JFIF:ALL= "$JPG"
+    exiftool -q -overwrite_original "-ThumbnailImage<=$THUMB" "$JPG"
+    exiftool -q -overwrite_original -Orientation=$ORIENTATION \
+             -n "$JPG"
+done
