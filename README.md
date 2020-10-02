@@ -1,6 +1,13 @@
 pdf4cam converts PDF documents so that they can be viewed inside a
 digital camera as JPEG images. It has been tested with a Ricoh GRⅢ.
 
+If it doesn’t work with your camera:
+
+  * Replace the template file `pdf4cam.jpg` with an image file taken
+    with your camera.
+    
+  * Match the resolution to that of your camera.
+
 
 License
 =======
