@@ -35,13 +35,17 @@ Convert PDF file to: 100__PDF/P0000000.JPG, 100__PDF/P0000001.JPG, ...
     -S NUMBER   number of first image, default $START_NUMBER
     -R DPI      resolution when rendering the PDF, default $RESOLUTION
 
-The images are viewable in camera. Avoid file names with numbers that
-are already on the camera. Even if the prefix is different than "P",
-this can lead to naming conflicts and the camera will only display one
-set of images.
+The images are viewable in camera.
 
 If 100__PDF already exists, then the number in front is incremented
 until a directory is found that does not yet exist.
+
+Note that each file number and each directory number should only
+appear once, or your camera may not show images.  Examples:
+
+  * file naming conflict: 100__PDF/P0000187.JPG, 105RICOH/M0000187.JPG
+
+  * directory naming conflict: 123__PDF, 123RICOH
 EOF
 }
 
