@@ -91,17 +91,31 @@ $CHECK && {
 }
 
 # Rasterize:
-convert -sampling-factor 4:2:2 -density "$DENSITY" \
-        -rotate "$ANGLE" -resize "$SIZE" \
-        "$PDF" -background white -alpha remove \
-        -scene "$START_NUMBER" P%07d.JPG
+convert -sampling-factor 4:2:2 \
+        -density "$DENSITY" \
+        -rotate "$ANGLE" \
+        -resize "$SIZE" \
+        "$PDF" \
+        -background white \
+        -alpha remove \
+        -colorspace sRGB \
+        -type truecolor \
+        -scene "$START_NUMBER" \
+        P%07d.JPG
 
 # Make compatible with camera:
 THUMBD="$(mktemp -d)"
 for JPG in P+([0-9]).JPG; do
     THUMB="$THUMBD/$JPG"
-    convert "$JPG" -resize 160x120 -background black -gravity center \
-            -extent 160x120 -sampling-factor 4:2:2 "$THUMB"
+    convert "$JPG" \
+            -resize 160x120 \
+            -background black \
+            -gravity center \
+            -colorspace sRGB \
+            -type truecolor \
+            -extent 160x120 \
+            -sampling-factor 4:2:2 \
+            "$THUMB"
     exiftool -q -overwrite_original -TagsFromFile "$TEMPLATE" \
              -all:all -unsafe -XML:All -JFIF:ALL= "$JPG"
     exiftool -q -overwrite_original "-ThumbnailImage<=$THUMB" "$JPG"
