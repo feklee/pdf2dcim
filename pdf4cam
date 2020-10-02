@@ -11,7 +11,6 @@ START_NUMBER=0
 ANGLE=0
 ORIENTATION=1 # 1 = 0°, 3 = 180°, 6 = 90°, 8 = -90°
 RESOLUTION=300
-CHECK=true
 
 function verify_presence {
     hash "$1" 2>/dev/null || {
@@ -26,11 +25,10 @@ verify_presence exiftool
 # Usage info
 function show_help {
 cat << EOF
-Usage: ${0##*/} [-hWHD] [PDF FILE]
-Convert image files to: P0000000.JPG, P0000001.JPG, ...
+Usage: ${0##*/} [OPTION]... PDF-FILE
+Convert PDF file to: 100__PDF/P0000000.JPG, 100__PDF/P0000001.JPG, ...
 
     -h          display this help and exit
-    -n          don't check for existing output files
     -W WIDTH    width in mm, default $WIDTH
     -H HEIGHT   height in mm, default $HEIGHT
     -P          portrait, default landscape
@@ -40,7 +38,10 @@ Convert image files to: P0000000.JPG, P0000001.JPG, ...
 The images are viewable in camera. Avoid file names with numbers that
 are already on the camera. Even if the prefix is different than "P",
 this can lead to naming conflicts and the camera will only display one
-of images.
+set of images.
+
+If 100__PDF already exists, then the number in front is incremented
+until a directory is found that does not yet exist.
 EOF
 }
 
@@ -50,8 +51,6 @@ while getopts hnW:H:PS:R: opt; do
         h)
             show_help
             exit 0
-            ;;
-        n)  CHECK=false
             ;;
         W)  WIDTH=$OPTARG
             ;;
@@ -77,18 +76,28 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
+function dcf_dir_name {
+    printf "%03d__PDF" $1
+}
+
+i=100 # minimum number allowed by DCF Version 2.0
+DIR=$(dcf_dir_name $i)
+until mkdir $DIR 2>/dev/null; do
+    ((i++))
+    DIR=$(dcf_dir_name $i)
+    [ $i -gt 999 ] && { # out of range
+        echo "Cannot create directory"
+        exit 1
+    }
+done
+
+trap "rmdir --ignore-fail-on-non-empty $DIR" EXIT # in case of error
+
 PDF="$1"
 SIZE="${WIDTH}x$HEIGHT"
 SCRIPT_DIR="$(dirname "$BASH_SOURCE")"
 TEMPLATE="$SCRIPT_DIR/pdf4cam.jpg" # taken with a camera, to copy EXIF
 DENSITY="${RESOLUTION}x$RESOLUTION"
-
-$CHECK && {
-    compgen -G "P+([0-9]).JPG" >/dev/null && {
-        echo "Output files already exist" >&2
-        exit 1
-    }
-}
 
 # Rasterize:
 convert -sampling-factor 4:2:2 \
@@ -101,12 +110,12 @@ convert -sampling-factor 4:2:2 \
         -colorspace sRGB \
         -type truecolor \
         -scene "$START_NUMBER" \
-        P%07d.JPG
+        $DIR/P%07d.JPG
 
 # Make compatible with camera:
 THUMBD="$(mktemp -d)"
-for JPG in P+([0-9]).JPG; do
-    THUMB="$THUMBD/$JPG"
+for JPG in $DIR/P+([0-9]).JPG; do
+    THUMB="$THUMBD/$(basename $JPG)"
     convert "$JPG" \
             -resize 160x120 \
             -background black \
@@ -122,3 +131,5 @@ for JPG in P+([0-9]).JPG; do
     exiftool -q -overwrite_original -Orientation=$ORIENTATION \
              -n "$JPG"
 done
+
+echo "Created JPEG images in $DIR"
