@@ -43,9 +43,9 @@ until a directory is found that does not yet exist.
 Note that each file number and each directory number should only
 appear once, or your camera may not show images.  Examples:
 
-  * file naming conflict: 100__PDF/P0000187.JPG, 105RICOH/M0000187.JPG
+  * File naming conflict: 100__PDF/P0000187.JPG, 105RICOH/M0000187.JPG
 
-  * directory naming conflict: 123__PDF, 123RICOH
+  * Directory naming conflict: 123__PDF, 123RICOH
 EOF
 }
 
