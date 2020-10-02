@@ -120,7 +120,11 @@ convert -sampling-factor 4:2:2 \
 THUMBD="$(mktemp -d)"
 for JPG in $DIR/P+([0-9]).JPG; do
     THUMB="$THUMBD/$(basename $JPG)"
+
+    # Thumbnails >64 kiB will lead to EXIF issues.
     convert "$JPG" \
+            -strip \
+            -quality 85 \
             -resize 160x120 \
             -background black \
             -gravity center \
@@ -129,6 +133,7 @@ for JPG in $DIR/P+([0-9]).JPG; do
             -extent 160x120 \
             -sampling-factor 4:2:2 \
             "$THUMB"
+
     exiftool -q -overwrite_original -TagsFromFile "$TEMPLATE" \
              -all:all -unsafe -XML:All -JFIF:ALL= "$JPG"
     exiftool -q -overwrite_original "-ThumbnailImage<=$THUMB" "$JPG"
