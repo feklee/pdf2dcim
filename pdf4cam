@@ -29,8 +29,8 @@ Usage: ${0##*/} [-hWHD] [PDF FILE]
 Convert image files to: P0000000.JPG, P0000001.JPG, ...
 
     -h          display this help and exit
-    -W WIDTH    width in mm, default $W
-    -H HEIGHT   height in mm, default $H
+    -W WIDTH    width in mm, default $WIDTH
+    -H HEIGHT   height in mm, default $HEIGHT
     -P          portrait, default landscape
     -S NUMBER   number of first image, default $START_NUMBER
     -R DPI      resolution when rendering the PDF, default $RESOLUTION
