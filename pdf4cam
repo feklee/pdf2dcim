@@ -11,6 +11,7 @@ START_NUMBER=0
 ANGLE=0
 ORIENTATION=1 # 1 = 0°, 3 = 180°, 6 = 90°, 8 = -90°
 RESOLUTION=300
+CHECK=true
 
 function verify_presence {
     hash "$1" 2>/dev/null || {
@@ -29,6 +30,7 @@ Usage: ${0##*/} [-hWHD] [PDF FILE]
 Convert image files to: P0000000.JPG, P0000001.JPG, ...
 
     -h          display this help and exit
+    -n          don't check for existing output files
     -W WIDTH    width in mm, default $WIDTH
     -H HEIGHT   height in mm, default $HEIGHT
     -P          portrait, default landscape
@@ -43,11 +45,13 @@ EOF
 }
 
 OPTIND=1
-while getopts hW:H:PS:R: opt; do
+while getopts hnW:H:PS:R: opt; do
     case $opt in
         h)
             show_help
             exit 0
+            ;;
+        n)  CHECK=false
             ;;
         W)  WIDTH=$OPTARG
             ;;
@@ -79,9 +83,11 @@ SCRIPT_DIR="$(dirname "$BASH_SOURCE")"
 TEMPLATE="$SCRIPT_DIR/pdf4cam.jpg" # taken with a camera, to copy EXIF
 DENSITY="${RESOLUTION}x$RESOLUTION"
 
-compgen -G "P+([0-9]).JPG" >/dev/null && {
-    echo "Output files already exist" >&2
-    exit 1
+$CHECK && {
+    compgen -G "P+([0-9]).JPG" >/dev/null && {
+        echo "Output files already exist" >&2
+        exit 1
+    }
 }
 
 # Rasterize:
