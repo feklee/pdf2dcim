@@ -100,7 +100,7 @@ trap "rmdir --ignore-fail-on-non-empty $DIR" EXIT # in case of error
 PDF="$1"
 SIZE="${WIDTH}x$HEIGHT"
 SCRIPT_DIR="$(dirname "$BASH_SOURCE")"
-TEMPLATE="$SCRIPT_DIR/pdf4cam.jpg" # taken with a camera, to copy EXIF
+TEMPLATE="$SCRIPT_DIR/pdf2dcim.jpg" # taken with a camera, to copy EXIF
 DENSITY="${RESOLUTION}x$RESOLUTION"
 
 # Rasterize:
